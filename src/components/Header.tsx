@@ -1,182 +1,345 @@
-"use client"
+
+"use client";
 
 import { authClient } from "@/lib/auth-client";
 import { INavLinks } from "@/types/category";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
+import {
+    FiChevronDown,
+    FiLogIn,
+    FiLogOut,
+    FiMenu,
+    FiUser,
+    FiUserPlus,
+    FiX,
+} from "react-icons/fi";
 
 const Header = () => {
     const [categories, setCategories] = useState<INavLinks[]>([]);
+    const [formattedDate] = useState(() =>
+        new Date().toLocaleDateString("bn-BD", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        })
+    );
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
     const pathname = usePathname();
-
-    const { data: session } = authClient.useSession()
-    const user = session?.user
-
-    const date = new Date().toLocaleDateString("bn-BD", {
-        dateStyle: "full"
-    })
+    const [menuPathname, setMenuPathname] = useState(pathname);
+    const router = useRouter();
+    const { data: session } = authClient.useSession();
+    const user = session?.user;
 
     useEffect(() => {
-        fetch("https://openapi.programming-hero.com/api/bazardor/categories")
-            .then((res) => res.json())
-            .then((data) => {
-                // console.log(data);
+        let active = true;
 
-                setCategories(data);
-            });
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch(
+                    "https://openapi.programming-hero.com/api/bazardor/categories"
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch categories");
+                }
+
+                const result = await response.json();
+                const items = Array.isArray(result)
+                    ? result
+                    : Array.isArray(result?.data)
+                        ? result.data
+                        : [];
+
+                if (active) setCategories(items);
+            } catch (error) {
+                console.error("Category fetch error:", error);
+                if (active) setCategories([]);
+            }
+        };
+
+        fetchCategories();
+
+        return () => {
+            active = false;
+        };
     }, []);
 
-
-    const handleSignOut = async () => {
-        await authClient.signOut()
-        setDropdownOpen(false)
+    if (menuPathname !== pathname) {
+        setMenuPathname(pathname);
+        setDropdownOpen(false);
+        setMobileMenuOpen(false);
     }
 
+    const handleSignOut = async () => {
+        try {
+            const { error } = await authClient.signOut();
+
+            if (error) {
+                console.error("Sign-out failed:", error);
+                return;
+            }
+
+            setDropdownOpen(false);
+            setMobileMenuOpen(false);
+            router.push("/");
+            router.refresh();
+        } catch (error) {
+            console.error("Unexpected sign-out error:", error);
+        }
+    };
+
+    const renderCategories = (mobile = false) =>
+        categories.map((cat) => {
+            const isActive = pathname === `/category/${cat.slug}`;
+
+            return (
+                <Link
+                    key={cat.id ?? cat.slug}
+                    href={`/category/${cat.slug}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${isActive
+                            ? "bg-[#068a3f] font-bold text-white shadow-sm"
+                            : "font-medium text-slate-600 hover:bg-green-50 hover:text-[#068a3f]"
+                        } ${mobile ? "w-full justify-start" : ""}`}
+                >
+                    {cat.icon && <span>{cat.icon}</span>}
+                    <span>{cat.nameBn}</span>
+                </Link>
+            );
+        });
 
     return (
-        <header className="pt-3">
-            <div className="max-w-7xl mx-auto flex justify-between">
-                {/* left side for logo */}
-                <Link href={"/"}>
-                    <div className="flex gap-1 items-center">
-                        <div className="h-10 w-10 bg-[#068a3f] rounded-2xl grid items-center justify-center">
+        <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 pt-2 backdrop-blur-md">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+                <div className="flex min-h-[68px] items-center justify-between gap-3 sm:min-h-[76px]">
+                    {/* Logo and date */}
+                    <Link
+                        href="/"
+                        aria-label="বাজার দর হোম"
+                        className="flex min-w-0 items-center gap-2.5"
+                    >
+                        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#068a3f] shadow-sm sm:size-12">
                             <Image
-                                src={"/logo-icon.png"}
-                                alt="bazar-dor-logo"
-                                height={18}
+                                src="/logo-icon.png"
+                                alt="বাজার দর"
                                 width={28}
-                            >
-                            </Image>
-                        </div>
-                        <div>
-                            <h1>বাজার দর</h1>
-                            <p>{date}</p>
-                        </div>
-                    </div>
-                </Link>
-                {/* right side for button and profile */}
-                {/* <div className="flex gap-2">
-                    <Link href={"/signin"}>
-                        <button className="btn btn-ghost">সাইন ইন</button>
-                    </Link>
-                    <Link href={'/signup'}>
-                        <button className="btn btn-accent bg-green-500 text-white">সাইন আপ</button>
-                    </Link>
-                </div> */}
+                                height={24}
+                                priority
+                                className="h-auto w-7 object-contain"
+                            />
+                        </span>
 
-                {/* Right Auth / Profile Menu */}
-                <div className="flex items-center gap-3 shrink-0">
-                    {user ? (
-                        <div className="relative">
-                            <button
-                                onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="flex items-center gap-2.5 p-1 pr-3 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer"
-                                id="user-menu-button"
-                            >
-                                <div className="avatar">
-                                    <div className="w-8 h-8 rounded-full ring-2 ring-teal-500 ring-offset-1 overflow-hidden bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-xs">
-                                        <img src={user?.image} alt="User" />
-                                    </div>
-                                </div>
-                                <div className="hidden sm:flex flex-col text-left">
-                                    <span className="text-xs font-bold text-slate-800 leading-tight">{user?.name}</span>
-                                    
-                                </div>
-                            </button>
+                        <span className="min-w-0">
+                            <span className="block text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                                বাজার দর
+                            </span>
+                            <span className="block max-w-[190px] truncate text-[10px] font-medium text-slate-500 sm:max-w-none sm:text-xs">
+                                {formattedDate || "\u00a0"}
+                            </span>
+                        </span>
+                    </Link>
 
-                            {/* Dropdown Menu (Figma Screen 7) */}
-                            {dropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 shadow-xl rounded-2xl py-2 z-50 text-xs">
-                                    <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
-                                        <p className="font-bold text-slate-900 truncate">{user?.name}</p>
-                                        <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+                    {/* Desktop authentication */}
+                    <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                        {user ? (
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setDropdownOpen((open) => !open)}
+                                    aria-expanded={dropdownOpen}
+                                    className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1.5 pl-1.5 pr-3 transition hover:bg-green-50"
+                                >
+                                    <span className="grid size-9 place-items-center overflow-hidden rounded-full bg-green-100 font-bold text-[#068a3f]">
+                                        {user.image ? (
+                                            <img
+                                                src={user.image}
+                                                alt=""
+                                                className="size-full object-cover"
+                                            />
+                                        ) : (
+                                            (user.name?.trim().charAt(0) || "U").toUpperCase()
+                                        )}
+                                    </span>
+                                    <span className="hidden max-w-28 truncate text-sm font-bold text-slate-700 md:block">
+                                        {user.name}
+                                    </span>
+                                    <FiChevronDown
+                                        className={`size-4 transition-transform ${dropdownOpen ? "rotate-180" : ""
+                                            }`}
+                                    />
+                                </button>
+
+                                {dropdownOpen && (
+                                    <div className="absolute right-0 top-full mt-3 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-xl">
+                                        <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
+                                            <p className="truncate text-sm font-bold text-slate-900">
+                                                {user.name}
+                                            </p>
+                                            <p className="mt-1 truncate text-xs text-slate-500">
+                                                {user.email}
+                                            </p>
+                                        </div>
+
+                                        <Link
+                                            href="/profile"
+                                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-green-50 hover:text-[#068a3f]"
+                                        >
+                                            <FiUser className="size-4" />
+                                            প্রোফাইল ড্যাশবোর্ড
+                                        </Link>
+
+                                        
+
+                                        <button
+                                            type="button"
+                                            onClick={handleSignOut}
+                                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                                        >
+                                            <FiLogOut className="size-4" />
+                                            সাইন আউট
+                                        </button>
                                     </div>
-                                    <Link
-                                        href="/profile"
-                                        onClick={() => setDropdownOpen(false)}
-                                        className="flex items-center gap-2 px-4 py-2.5 hover:bg-teal-50 text-slate-700 hover:text-teal-700 font-semibold transition-colors"
-                                    >
-                                        <span>👤</span> প্রোফাইল ড্যাশবোর্ড
-                                    </Link>
-                                    <Link
-                                        href="/profile/update"
-                                        onClick={() => setDropdownOpen(false)}
-                                        className="flex items-center gap-2 px-4 py-2.5 hover:bg-teal-50 text-slate-700 hover:text-teal-700 font-semibold transition-colors"
-                                    >
-                                        <span>✏️</span> তথ্য পরিবর্তন করুন
-                                    </Link>
-                                    <div className="border-t border-slate-100 my-1"></div>
-                                    <button
-                                        onClick={handleSignOut}
-                                        className="w-full text-left flex items-center gap-2 px-4 py-2.5 text-rose-600 hover:bg-rose-50 font-semibold transition-colors cursor-pointer"
-                                    >
-                                        <span>🚪</span> সাইন আউট
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            <Link href="/signin">
-                                <button className="btn btn-ghost btn-sm text-slate-700 hover:text-teal-700 font-bold rounded-xl text-xs">
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/signin"
+                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold text-slate-700 hover:bg-green-50 hover:text-[#068a3f]"
+                                >
+                                    <FiLogIn className="size-4" />
                                     লগইন
-                                </button>
-                            </Link>
-                            <Link href="/signup">
-                                <button className="btn btn-sm bg-teal-600 hover:bg-teal-700 border-0 text-white font-bold px-4 rounded-xl shadow-xs text-xs">
+                                </Link>
+
+                                <Link
+                                    href="/signup"
+                                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#068a3f] px-4 text-sm font-bold text-white transition hover:bg-[#057534]"
+                                >
+                                    <FiUserPlus className="size-4" />
                                     নিবন্ধন
-                                </button>
+                                </Link>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Mobile controls */}
+                    <div className="flex shrink-0 items-center gap-2 sm:hidden">
+                        {user && (
+                            <Link
+                                href="/profile"
+                                aria-label="প্রোফাইল"
+                                className="grid size-10 place-items-center overflow-hidden rounded-full border border-green-200 bg-green-50 font-bold text-[#068a3f]"
+                            >
+                                {user.image ? (
+                                    <img
+                                        src={user.image}
+                                        alt=""
+                                        className="size-full object-cover"
+                                    />
+                                ) : (
+                                    (user.name?.trim().charAt(0) || "U").toUpperCase()
+                                )}
                             </Link>
-                        </div>
-                    )}
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={() => setMobileMenuOpen((open) => !open)}
+                            aria-expanded={mobileMenuOpen}
+                            aria-label={mobileMenuOpen ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
+                            className="grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-700 hover:bg-green-50 hover:text-[#068a3f]"
+                        >
+                            {mobileMenuOpen ? (
+                                <FiX className="size-5" />
+                            ) : (
+                                <FiMenu className="size-5" />
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div>
-                <nav>
-                    <div>
-                        <div className="flex w-full flex-col">
-
-                            <div className="divider m-0 p-0"></div>
-
-                        </div>
-                        <div className="flex gap-5 justify-start max-w-7xl mx-auto">
-
-
-                            {categories.map((cat: INavLinks) => {
-                                // /category/processor
-                                const isActive = pathname === `/category/${cat.slug}`;
-
-                                return (
-                                    <Link
-                                        key={cat.id}
-                                        href={`/category/${cat.slug}`}
-                                        className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all flex items-center gap-1.5 ${isActive
-                                            ? 'bg-[#068a3f] text-white shadow-xs font-bold'
-                                            : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 font-medium'
-                                            }`}
-                                    >
-                                        <span>{cat.icon}</span>
-                                        <span>{cat.nameBn}</span>
-                                    </Link>
-                                );
-                            })}
-
-                        </div>
-                        <div className="flex w-full flex-col">
-
-                            <div className="divider m-0 p-0"></div>
-
-                        </div>
+            {/* Desktop category navigation */}
+            <nav
+                aria-label="প্রধান ক্যাটাগরি"
+                className="hidden border-t border-slate-100 sm:block"
+            >
+                <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center gap-2 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {renderCategories()}
                     </div>
-                </nav>
-            </div>
+                </div>
+            </nav>
 
-        </header >
+            {/* Mobile menu */}
+            {mobileMenuOpen && (
+                <div className="border-t border-slate-200 bg-white shadow-lg sm:hidden">
+                    <nav
+                        aria-label="মোবাইল নেভিগেশন"
+                        className="mx-auto max-w-6xl space-y-3 px-4 py-4"
+                    >
+                        {!user ? (
+                            <div className="grid grid-cols-2 gap-2 border-b border-slate-100 pb-4">
+                                <Link
+                                    href="/signin"
+                                    className="flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-700"
+                                >
+                                    <FiLogIn className="size-4" />
+                                    লগইন
+                                </Link>
+                                <Link
+                                    href="/signup"
+                                    className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[#068a3f] text-sm font-bold text-white"
+                                >
+                                    <FiUserPlus className="size-4" />
+                                    নিবন্ধন
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="rounded-xl bg-green-50 p-3">
+                                <p className="truncate text-sm font-bold text-slate-900">
+                                    {user.name}
+                                </p>
+                                <p className="mt-1 truncate text-xs text-slate-500">
+                                    {user.email}
+                                </p>
+                                <div className="mt-3 grid grid-cols-2 gap-2">
+                                    <Link
+                                        href="/profile"
+                                        className="flex items-center justify-center gap-2 rounded-lg border border-green-200 bg-white px-2 py-2 text-xs font-semibold text-[#068a3f]"
+                                    >
+                                        <FiUser className="size-4" />
+                                        প্রোফাইল
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={handleSignOut}
+                                        className="flex items-center justify-center gap-2 rounded-lg border border-rose-100 bg-white px-2 py-2 text-xs font-semibold text-rose-600"
+                                    >
+                                        <FiLogOut className="size-4" />
+                                        সাইন আউট
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <p className="px-2 text-xs font-bold text-slate-400">
+                            পণ্যের ক্যাটাগরি
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {renderCategories(true)}
+                        </div>
+                    </nav>
+                </div>
+            )}
+        </header>
     );
 };
 
