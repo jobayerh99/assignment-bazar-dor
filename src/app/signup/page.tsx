@@ -1,11 +1,14 @@
 'use client'
 import { authClient } from '@/lib/auth-client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 
 const SignUpPage = () => {
+
+    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -17,10 +20,22 @@ const SignUpPage = () => {
             name: formValue.name as string,
             email: formValue.email as string,
             password: formValue.password as string,
-            callbackURL: "http://localhost:3000/"
+            callbackURL: "/"
         });
-        console.log(data, error);
+
+        if (router) {
+            router.push("/")
+        }
+
+        // console.log(data, error);
     }
+
+    const handleGoogleSignIn = async () => {
+        await authClient.signIn.social({
+            provider: "google",
+            callbackURL: "/"
+        });
+    };
 
     return (
         <div className='max-w-6xl mx-auto flex flex-col justify-center items-center'>
@@ -73,7 +88,7 @@ const SignUpPage = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    {/* <div className="space-y-1.5">
                         <label className="block font-bold text-xs text-slate-700">পাসওয়ার্ড নিশ্চিত করুন</label>
                         <div className="relative">
 
@@ -84,7 +99,7 @@ const SignUpPage = () => {
                                 className="input input-bordered w-full pl-10 rounded-xl text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:outline-hidden"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     <div className="text-xs text-slate-500 pt-1">
                         <label className="flex items-center gap-2 cursor-pointer font-medium">
@@ -109,7 +124,7 @@ const SignUpPage = () => {
                     {/* social button */}
                     <div className="grid grid-cols-2 gap-3">
                         <button
-                            // onClick={handleGoogleSignIn}
+                            onClick={handleGoogleSignIn}
                             type="button"
                             className="btn btn-outline border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 text-xs"
                         >
