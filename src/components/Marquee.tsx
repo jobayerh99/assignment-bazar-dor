@@ -8,7 +8,7 @@ const Marquee = async () => {
 
     const data: IProduct[] = await res.json();
 
-    console.log(data);
+    // console.log(data);
 
 
     return (
