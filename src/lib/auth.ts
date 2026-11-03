@@ -23,4 +23,8 @@ export const auth = betterAuth({
     database: mongodbAdapter(db, {
         client,
     }),
+    trustedOrigins: [
+        "http://localhost:3000",
+        "https://assignment-bazar-hl845qxgk-particle3.vercel.app/", // আপনার আসল Vercel URL দিন
+    ],
 });
