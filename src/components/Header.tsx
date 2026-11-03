@@ -1,4 +1,3 @@
-
 "use client";
 
 import { authClient } from "@/lib/auth-client";
@@ -19,12 +18,8 @@ import {
 
 const Header = () => {
     const [categories, setCategories] = useState<INavLinks[]>([]);
-    const formattedDate = new Date().toLocaleDateString('bn-BD', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
+
+    const [formattedDate, setFormattedDate] = useState("");
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -33,6 +28,18 @@ const Header = () => {
     const router = useRouter();
     const { data: session } = authClient.useSession();
     const user = session?.user;
+
+    useEffect(() => {
+        setFormattedDate(
+            new Date().toLocaleDateString("bn-BD", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                timeZone: "Asia/Dhaka",
+            })
+        );
+    }, []);
 
     useEffect(() => {
         let active = true;
@@ -192,8 +199,6 @@ const Header = () => {
                                             <FiUser className="size-4" />
                                             প্রোফাইল ড্যাশবোর্ড
                                         </Link>
-
-
 
                                         <button
                                             type="button"
