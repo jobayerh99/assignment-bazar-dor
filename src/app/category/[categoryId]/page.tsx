@@ -1,6 +1,7 @@
 
 import React from "react";
 import CategoryProducts from "@/components/CategoryProducts";
+import { notFound } from "next/navigation";
 
 interface CategoryPageProps {
     params: Promise<{
@@ -21,6 +22,10 @@ const CategoryPage = async ({ params }: CategoryPageProps) => {
     }
 
     const data = await res.json();
+
+    if(!data){
+        notFound()
+    }
 
     // Ensure API response is an array
     const categoryProducts = Array.isArray(data) ? data : [];

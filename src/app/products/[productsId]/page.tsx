@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 
 interface ProductPageProps {
     params: Promise<{
@@ -94,6 +95,10 @@ export default async function ProductPage({
 
     const isRising = product.change?.dir === "up";
     const isFalling = product.change?.dir === "down";
+
+    if(!product){
+        notFound()
+    }
 
 
     return (
