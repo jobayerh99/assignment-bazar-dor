@@ -42,7 +42,7 @@ export default async function Home() {
 
         <div className="pt-5">
           <h2 className="mb-6 text-2xl font-bold">
-            আজ দাম কমেছে <span className="text-green-600 font-bold">▲</span>
+            আজ দাম কমেছে <span className="text-green-600 font-bold">▼</span>
           </h2>
           {/* Fallen Products */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -52,7 +52,7 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="pt-6">
+        <div className="pt-6 scroll-mt-30 py-10" id="all-products">
           <h2 className="mb-6 text-2xl font-bold">সব পন্য</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.map((product) => (

@@ -1,91 +1,86 @@
-
 "use client";
 
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FiLogOut, FiUser, FiCheckCircle } from "react-icons/fi";
+import { FiLogOut, FiUser, FiEdit3 } from "react-icons/fi";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
     const router = useRouter();
-    const { data: session } = authClient.useSession();
+
+    const { data: session, isPending } = authClient.useSession();
     const user = session?.user;
 
-    const [isUpdating, setIsUpdating] = useState(false);
     const [isSigningOut, setIsSigningOut] = useState(false);
-    const [message, setMessage] = useState("");
-    const [messageType, setMessageType] = useState<"success" | "error">(
-        "success"
-    );
 
-    const handleUpdateProfile = async (e:React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setMessage("");
-
-        const formData = new FormData(e.currentTarget);
-        const name = String(formData.get("name") ?? "").trim();
-
-        if (!name) {
-            setMessage("আপনার নাম লিখুন।");
-            setMessageType("error");
-            return;
-        }
-
-        if (name === user?.name) {
-            setMessage("আপনার নাম আগের মতোই আছে।");
-            setMessageType("error");
-            return;
-        }
-
-        setIsUpdating(true);
-
-        try {
-            const { error } = await authClient.updateUser({ name });
-
-            if (error) {
-                setMessage(error.message || "প্রোফাইল আপডেট করা যায়নি।");
-                setMessageType("error");
-                return;
-            }
-
-            setMessage("আপনার প্রোফাইল সফলভাবে আপডেট হয়েছে।");
-            setMessageType("success");
-            router.refresh();
-        } catch {
-            setMessage("একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-            setMessageType("error");
-        } finally {
-            setIsUpdating(false);
-        }
-    };
-
+    // Sign Out
     const handleSignOut = async () => {
         setIsSigningOut(true);
-        setMessage("");
 
         try {
             const { error } = await authClient.signOut();
 
             if (error) {
-                setMessage(error.message || "সাইন আউট করা যায়নি।");
-                setMessageType("error");
-                setIsSigningOut(false);
+                toast.error(error.message || "সাইন আউট করা যায়নি।");
                 return;
             }
 
-            router.push("/");
-            router.refresh();
+            toast.success("সফলভাবে সাইন আউট হয়েছে!");
+
+            setTimeout(() => {
+                router.push("/");
+                router.refresh();
+            }, 700);
+
         } catch {
-            setMessage("সাইন আউট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-            setMessageType("error");
+            toast.error("সাইন আউট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+        } finally {
             setIsSigningOut(false);
         }
     };
 
+    // Loading State
+    if (isPending) {
+        return (
+            <main className="flex min-h-[calc(100vh-100px)] items-center justify-center bg-[#F0F6F0]">
+                <span className="loading loading-spinner loading-lg text-[#05893E]" />
+            </main>
+        );
+    }
+
+    // Unauthenticated User
+    if (!user) {
+        return (
+            <main className="flex min-h-[calc(100vh-100px)] items-center justify-center bg-[#F0F6F0] px-4">
+                <div className="w-full max-w-md rounded-xl border border-[#E6ECE6] bg-white p-6 text-center shadow-sm">
+                    <FiUser className="mx-auto text-4xl text-[#05893E]" />
+
+                    <h2 className="mt-4 text-lg font-bold text-[#26352A]">
+                        আপনি সাইন ইন করেননি
+                    </h2>
+
+                    <p className="mt-2 text-sm text-[#758078]">
+                        প্রোফাইল দেখতে প্রথমে আপনার অ্যাকাউন্টে সাইন ইন করুন।
+                    </p>
+
+                    <Link
+                        href="/sign-in"
+                        className="btn mt-5 h-11 min-h-11 w-full rounded-lg border-0 bg-[#05893E] text-white hover:bg-[#047331]"
+                    >
+                        সাইন ইন করুন
+                    </Link>
+                </div>
+            </main>
+        );
+    }
+
     return (
         <main className="min-h-[calc(100vh-100px)] bg-[#F0F6F0] px-4 py-10 sm:px-6 sm:py-14">
             <div className="mx-auto w-full max-w-3xl">
+
                 {/* Page Heading */}
                 <header className="mb-6 sm:mb-8">
                     <h1 className="text-2xl font-black tracking-tight text-[#17251B] sm:text-3xl">
@@ -98,11 +93,12 @@ const ProfilePage = () => {
                 </header>
 
                 {/* User Information Card */}
-                <section className="mb-5 flex flex-col gap-4 rounded-xl border border-[#E6ECE6] bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <section className="flex flex-col gap-4 rounded-xl border border-[#E6ECE6] bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+
+                    {/* Profile Image and Information */}
                     <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                        {/* Profile Image */}
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#E5F3E8] sm:h-14 sm:w-14">
-                            {user?.image ? (
+                            {user.image ? (
                                 <Image
                                     src={user.image}
                                     alt={user.name || "প্রোফাইল ছবি"}
@@ -117,104 +113,78 @@ const ProfilePage = () => {
                             )}
                         </div>
 
-                        {/* Name and Email */}
                         <div className="min-w-0 flex-1">
                             <h2 className="truncate text-sm font-extrabold text-[#26352A] sm:text-base">
-                                {user?.name || "ব্যবহারকারী"}
+                                {user.name || "ব্যবহারকারী"}
                             </h2>
 
                             <p className="mt-1 break-all text-xs text-[#8A948C] sm:text-sm">
-                                {user?.email || ""}
+                                {user.email}
                             </p>
                         </div>
                     </div>
 
-                    {/* Sign Out */}
-                    <button
-                        type="button"
-                        onClick={handleSignOut}
-                        disabled={isSigningOut}
-                        className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[#F2CACA] px-4 text-sm font-bold text-[#D94A4A] transition hover:bg-[#FFF1F1] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                    >
-                        <FiLogOut size={16} />
-                        {isSigningOut ? "সাইন আউট হচ্ছে..." : "সাইন আউট"}
-                    </button>
+                    {/* Profile Actions */}
+                    <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+
+                        {/* Update Information */}
+                        <Link
+                            href="/profile/update-information"
+                            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#05893E] px-4 text-sm font-bold text-white transition hover:bg-[#047331] sm:w-auto"
+                        >
+                            <FiEdit3 size={16} />
+                            তথ্য হালনাগাদ করুন
+                        </Link>
+
+                        {/* Sign Out */}
+                        <button
+                            type="button"
+                            onClick={handleSignOut}
+                            disabled={isSigningOut}
+                            className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[#F2CACA] px-4 text-sm font-bold text-[#D94A4A] transition hover:bg-[#FFF1F1] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        >
+                            <FiLogOut size={16} />
+
+                            {isSigningOut
+                                ? "সাইন আউট হচ্ছে..."
+                                : "সাইন আউট"}
+                        </button>
+                    </div>
                 </section>
 
-                {/* Update Profile Card */}
-                <section className="rounded-xl border border-[#E6ECE6] bg-white/90 p-4 shadow-sm sm:p-6">
+                {/* Account Information */}
+                <section className="mt-5 rounded-xl border border-[#E6ECE6] bg-white/90 p-4 shadow-sm sm:p-6">
                     <div className="mb-5 border-b border-[#EEF1EE] pb-3">
                         <h2 className="text-sm font-extrabold text-[#26352A] sm:text-base">
-                            ব্যক্তিগত তথ্য
+                            অ্যাকাউন্টের তথ্য
                         </h2>
 
                         <p className="mt-1 text-xs text-[#8A948C] sm:text-sm">
-                            আপনার নাম পরিবর্তন করতে নিচের ফর্মটি ব্যবহার করুন।
+                            আপনার অ্যাকাউন্টের বর্তমান তথ্য।
                         </p>
                     </div>
 
-                    <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="name"
-                                className="block text-sm font-bold text-[#47534A]"
-                            >
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-xs font-medium text-[#8A948C]">
                                 নাম
-                            </label>
+                            </p>
 
-                            <div className="relative">
-                                <FiUser
-                                    size={17}
-                                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9AA59C]"
-                                />
-
-                                <input
-                                    id="name"
-                                    name="name"
-                                    type="text"
-                                    defaultValue={user?.name || ""}
-                                    autoComplete="name"
-                                    placeholder="আপনার নাম লিখুন"
-                                    required
-                                    maxLength={100}
-                                    className="input h-11 w-full rounded-lg border-[#E3E9E3] bg-[#FAFCFA] pl-10 pr-4 text-sm text-[#26352A] outline-none transition placeholder:text-[#A2AAA4] focus:border-[#05893E] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#05893E]/10"
-                                />
-                            </div>
+                            <p className="mt-1 text-sm font-semibold text-[#26352A]">
+                                {user.name || "নাম দেওয়া হয়নি"}
+                            </p>
                         </div>
 
-                        {/* Feedback Message */}
-                        {message && (
-                            <div
-                                role="status"
-                                aria-live="polite"
-                                className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${messageType === "success"
-                                        ? "border-green-200 bg-green-50 text-green-800"
-                                        : "border-red-200 bg-red-50 text-red-700"
-                                    }`}
-                            >
-                                {messageType === "success" && (
-                                    <FiCheckCircle className="mt-0.5 shrink-0" size={16} />
-                                )}
-                                <span>{message}</span>
-                            </div>
-                        )}
+                        <div className="border-t border-[#EEF1EE] pt-4">
+                            <p className="text-xs font-medium text-[#8A948C]">
+                                ইমেইল ঠিকানা
+                            </p>
 
-                        {/* Update Button */}
-                        <button
-                            type="submit"
-                            disabled={isUpdating || isSigningOut || !user}
-                            className="btn h-11 min-h-11 w-full rounded-lg border-0 bg-[#05893E] text-sm font-extrabold text-white shadow-sm transition hover:bg-[#047331] disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            {isUpdating ? (
-                                <>
-                                    <span className="loading loading-spinner loading-sm" />
-                                    আপডেট হচ্ছে...
-                                </>
-                            ) : (
-                                "আপডেট"
-                            )}
-                        </button>
-                    </form>
+                            <p className="mt-1 break-all text-sm font-semibold text-[#26352A]">
+                                {user.email}
+                            </p>
+                        </div>
+                    </div>
                 </section>
 
                 {/* Footer Note */}

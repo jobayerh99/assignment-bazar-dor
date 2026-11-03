@@ -1,4 +1,3 @@
-
 "use client";
 
 import { authClient } from "@/lib/auth-client";
@@ -8,6 +7,7 @@ import { useState, type FormEvent } from "react";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { FiLock, FiMail, FiLogIn } from "react-icons/fi";
+import toast from "react-hot-toast";
 
 const SignInPage = () => {
     const router = useRouter();
@@ -16,20 +16,16 @@ const SignInPage = () => {
     const [socialLoading, setSocialLoading] = useState<
         "google" | "github" | null
     >(null);
-    const [message, setMessage] = useState("");
-    const [messageType, setMessageType] = useState<"error" | "success">("error");
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setMessage("");
 
         const formData = new FormData(e.currentTarget);
         const email = String(formData.get("email") ?? "").trim();
         const password = String(formData.get("password") ?? "");
 
         if (!email || !password) {
-            setMessage("ইমেইল ও পাসওয়ার্ড লিখুন।");
-            setMessageType("error");
+            toast.error("ইমেইল ও পাসওয়ার্ড লিখুন।");
             return;
         }
 
@@ -43,23 +39,24 @@ const SignInPage = () => {
             });
 
             if (error) {
-                setMessage(error.message || "ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।");
-                setMessageType("error");
+                toast.error(
+                    error.message || "ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।"
+                );
                 return;
             }
+
+            toast.success("সফলভাবে সাইন ইন হয়েছে!");
 
             router.push("/");
             router.refresh();
         } catch {
-            setMessage("সাইন ইন করা যায়নি। আবার চেষ্টা করুন।");
-            setMessageType("error");
+            toast.error("সাইন ইন করা যায়নি। আবার চেষ্টা করুন।");
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleSocialSignIn = async (provider: "google" | "github") => {
-        setMessage("");
         setSocialLoading(provider);
 
         try {
@@ -69,13 +66,11 @@ const SignInPage = () => {
             });
 
             if (error) {
-                setMessage(error.message || "সোশ্যাল সাইন ইন করা যায়নি।");
-                setMessageType("error");
+                toast.error(error.message || "সোশ্যাল সাইন ইন করা যায়নি।");
                 setSocialLoading(null);
             }
         } catch {
-            setMessage("একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-            setMessageType("error");
+            toast.error("একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।");
             setSocialLoading(null);
         }
     };
@@ -104,6 +99,7 @@ const SignInPage = () => {
                         <h2 className="text-lg font-extrabold text-slate-900">
                             আপনার অ্যাকাউন্টে প্রবেশ করুন
                         </h2>
+
                         <p className="mt-1 text-sm text-slate-500">
                             আপনার ইমেইল ও পাসওয়ার্ড ব্যবহার করুন।
                         </p>
@@ -163,20 +159,6 @@ const SignInPage = () => {
                                 />
                             </div>
                         </div>
-
-                        {/* Feedback */}
-                        {message && (
-                            <div
-                                role="alert"
-                                aria-live="polite"
-                                className={`rounded-xl border px-4 py-3 text-sm leading-6 ${messageType === "success"
-                                        ? "border-green-200 bg-green-50 text-green-800"
-                                        : "border-red-200 bg-red-50 text-red-700"
-                                    }`}
-                            >
-                                {message}
-                            </div>
-                        )}
 
                         {/* Submit */}
                         <button

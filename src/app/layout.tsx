@@ -3,6 +3,7 @@ import { Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Marquee from "@/components/Marquee";
+import { Toaster } from "react-hot-toast";
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
@@ -18,17 +19,23 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en" 
-      data-theme ="light"
-      
+      lang="en"
+      data-theme="light"
+
       className={` h-full antialiased`}
     >
       <body className={` min-h-full flex flex-col ${hindSiliguri.className}`}>
-        <Header/>
-        <Marquee/>
+        <Header />
+        <Marquee />
         {children}
-        
-        </body>
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          toastOptions={{
+            duration: 3000,
+          }}
+        />
+      </body>
     </html>
   );
 }

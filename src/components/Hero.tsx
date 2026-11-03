@@ -28,12 +28,12 @@ const Hero = () => {
                     </p>
 
                     {/* CTA Button */}
-                    <Link
-                        href="/"
+                    <a href="#all-products"
+                        
                         className="mt-3 inline-flex items-center justify-center rounded-md bg-[#07883e] px-3 py-1.5 text-[10px] font-semibold text-white shadow-[0_2px_3px_rgba(0,0,0,0.2)] transition hover:bg-[#066e33] sm:mt-4 sm:px-4 sm:py-2 sm:text-xs"
                     >
                         সব পণ্য দেখুন
-                    </Link>
+                    </a>
                 </div>
 
                 {/* Right Illustration */}

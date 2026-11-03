@@ -1,4 +1,3 @@
-
 "use client";
 
 import { authClient } from "@/lib/auth-client";
@@ -8,6 +7,7 @@ import { useState, type FormEvent } from "react";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { FiCheckCircle, FiLock, FiMail, FiUser } from "react-icons/fi";
+import toast from "react-hot-toast";
 
 const SignUpPage = () => {
     const router = useRouter();
@@ -16,12 +16,9 @@ const SignUpPage = () => {
     const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(
         null
     );
-    const [message, setMessage] = useState("");
-    const [messageType, setMessageType] = useState<"error" | "success">("error");
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setMessage("");
 
         const formData = new FormData(e.currentTarget);
         const name = String(formData.get("name") ?? "").trim();
@@ -30,17 +27,14 @@ const SignUpPage = () => {
         const acceptedTerms = formData.get("terms") === "on";
 
         if (!name || !email || !password) {
-            setMessage("সবগুলো ঘর পূরণ করুন।");
-            setMessageType("error");
+            toast.error("সবগুলো ঘর পূরণ করুন।");
             return;
         }
 
         if (password.length < 8) {
-            setMessage("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
-            setMessageType("error");
+            toast.error("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
             return;
         }
-
 
         setIsLoading(true);
 
@@ -53,25 +47,26 @@ const SignUpPage = () => {
             });
 
             if (error) {
-                setMessage(error.message || "অ্যাকাউন্ট তৈরি করা যায়নি। আবার চেষ্টা করুন।");
-                setMessageType("error");
+                toast.error(
+                    error.message || "অ্যাকাউন্ট তৈরি করা যায়নি। আবার চেষ্টা করুন।"
+                );
                 return;
             }
 
-            setMessageType("success");
-            setMessage("অ্যাকাউন্ট তৈরি হয়েছে! হোমপেজে নেওয়া হচ্ছে...");
+            toast.success("অ্যাকাউন্ট তৈরি হয়েছে! হোমপেজে নেওয়া হচ্ছে...");
+
             router.push("/");
             router.refresh();
         } catch {
-            setMessage("একটি সমস্যা হয়েছে। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।");
-            setMessageType("error");
+            toast.error(
+                "একটি সমস্যা হয়েছে। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।"
+            );
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleSocialSignIn = async (provider: "google" | "github") => {
-        setMessage("");
         setSocialLoading(provider);
 
         try {
@@ -81,24 +76,22 @@ const SignUpPage = () => {
             });
 
             if (error) {
-                setMessage(error.message || `${provider} দিয়ে সাইন ইন করা যায়নি।`);
-                setMessageType("error");
+                toast.error(error.message || `${provider} দিয়ে সাইন ইন করা যায়নি।`);
                 setSocialLoading(null);
             }
             // On success, Better Auth handles the social redirect.
         } catch {
-            setMessage("সোশ্যাল সাইন ইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
-            setMessageType("error");
+            toast.error("সোশ্যাল সাইন ইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
             setSocialLoading(null);
         }
     };
 
     const handleGithubSignIn = async () => {
-            await authClient.signIn.social({
-                provider: "github",
-                callbackURL: "/"
-            })
-        }
+        await authClient.signIn.social({
+            provider: "github",
+            callbackURL: "/",
+        });
+    };
 
     return (
         <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-green-50/80 via-white to-white px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
@@ -124,6 +117,7 @@ const SignUpPage = () => {
                         <h2 className="text-lg font-extrabold text-slate-900">
                             নতুন অ্যাকাউন্ট
                         </h2>
+
                         <p className="mt-1 text-sm text-slate-500">
                             আপনার তথ্য দিয়ে নিচের ফর্মটি পূরণ করুন।
                         </p>
@@ -216,21 +210,6 @@ const SignUpPage = () => {
                                 নিরাপদ পাসওয়ার্ড ব্যবহার করুন।
                             </p>
                         </div>
-
-                        
-                        {/* Feedback */}
-                        {message && (
-                            <div
-                                role="alert"
-                                aria-live="polite"
-                                className={`rounded-xl border px-4 py-3 text-sm leading-6 ${messageType === "success"
-                                        ? "border-green-200 bg-green-50 text-green-800"
-                                        : "border-red-200 bg-red-50 text-red-700"
-                                    }`}
-                            >
-                                {message}
-                            </div>
-                        )}
 
                         {/* Submit */}
                         <button

@@ -19,14 +19,12 @@ import {
 
 const Header = () => {
     const [categories, setCategories] = useState<INavLinks[]>([]);
-    const [formattedDate] = useState(() =>
-        new Date().toLocaleDateString("bn-BD", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        })
-    );
+    const formattedDate = new Date().toLocaleDateString('bn-BD', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -105,8 +103,8 @@ const Header = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     aria-current={isActive ? "page" : undefined}
                     className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${isActive
-                            ? "bg-[#068a3f] font-bold text-white shadow-sm"
-                            : "font-medium text-slate-600 hover:bg-green-50 hover:text-[#068a3f]"
+                        ? "bg-[#068a3f] font-bold text-white shadow-sm"
+                        : "font-medium text-slate-600 hover:bg-green-50 hover:text-[#068a3f]"
                         } ${mobile ? "w-full justify-start" : ""}`}
                 >
                     {cat.icon && <span>{cat.icon}</span>}
@@ -195,7 +193,7 @@ const Header = () => {
                                             প্রোফাইল ড্যাশবোর্ড
                                         </Link>
 
-                                        
+
 
                                         <button
                                             type="button"
