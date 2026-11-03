@@ -43,7 +43,7 @@ const SignUpPage = () => {
                 name,
                 email,
                 password,
-                callbackURL: "/signin",
+                callbackURL: "/",
             });
 
             if (error) {
