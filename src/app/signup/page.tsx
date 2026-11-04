@@ -55,7 +55,7 @@ const SignUpPage = () => {
 
             toast.success("অ্যাকাউন্ট তৈরি হয়েছে! হোমপেজে নেওয়া হচ্ছে...");
 
-            router.push("/");
+            router.push("/signin");
             router.refresh();
         } catch {
             toast.error(
