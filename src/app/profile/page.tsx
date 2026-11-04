@@ -18,26 +18,33 @@ const ProfilePage = () => {
 
     // Sign Out
     const handleSignOut = async () => {
+        if (isSigningOut) return;
+
         setIsSigningOut(true);
 
         try {
-            const { error } = await authClient.signOut();
+            const result = await authClient.signOut();
 
-            if (error) {
-                toast.error(error.message || "সাইন আউট করা যায়নি।");
+            if (result.error) {
+                toast.error(
+                    result.error.message || "সাইন আউট করা যায়নি।"
+                );
+                setIsSigningOut(false);
                 return;
             }
 
-            toast.success("সফলভাবে সাইন আউট হয়েছে!");
+            toast.success("সফলভাবে সাইন আউট হয়েছে!", {
+                duration: 2000,
+            });
 
             setTimeout(() => {
-                router.push("/");
+                router.replace("/");
                 router.refresh();
-            }, 700);
+            }, 2000);
 
-        } catch {
+        } catch (error) {
+            console.error("Sign out failed:", error);
             toast.error("সাইন আউট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-        } finally {
             setIsSigningOut(false);
         }
     };

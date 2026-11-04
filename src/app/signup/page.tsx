@@ -24,7 +24,7 @@ const SignUpPage = () => {
         const name = String(formData.get("name") ?? "").trim();
         const email = String(formData.get("email") ?? "").trim();
         const password = String(formData.get("password") ?? "");
-        const acceptedTerms = formData.get("terms") === "on";
+        
 
         if (!name || !email || !password) {
             toast.error("সবগুলো ঘর পূরণ করুন।");
@@ -53,7 +53,7 @@ const SignUpPage = () => {
                 return;
             }
 
-            toast.success("অ্যাকাউন্ট তৈরি হয়েছে! হোমপেজে নেওয়া হচ্ছে...");
+            toast.success("অ্যাকাউন্ট তৈরি হয়েছে! সাইন ইন পেজে নেওয়া হচ্ছে...");
 
             router.push("/signin");
             router.refresh();
