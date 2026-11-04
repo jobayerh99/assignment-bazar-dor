@@ -34,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Marquee />
         </Suspense>
         {children}
-        <Footer/>
+        <Footer />
         <Toaster
           position="top-center"
           reverseOrder={false}

@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
     FiChevronDown,
     FiLogIn,
@@ -89,6 +90,10 @@ const Header = () => {
                 console.error("Sign-out failed:", error);
                 return;
             }
+
+            toast.success("সফলভাবে সাইন আউট হয়েছে!", {
+                duration: 2000,
+            });
 
             setDropdownOpen(false);
             setMobileMenuOpen(false);

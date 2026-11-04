@@ -35,7 +35,6 @@ const SignInPage = () => {
             const { error } = await authClient.signIn.email({
                 email,
                 password,
-                callbackURL: "/",
             });
 
             if (error) {
